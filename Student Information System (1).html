@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Student Information System</title>
+<style>
+:root{--bg:#f4f6f9;--card:#fff;--tx:#1b2430;--mut:#667085;--bd:#e2e5ea;--pr:#2457d6;--prt:#fff;--dg:#c0392b;--ok:#1e8e5a;--wn:#b7791f;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#12161c;--card:#1b222c;--tx:#e8ecf2;--mut:#98a2b3;--bd:#2d3643;--pr:#5b8cff;--prt:#0b1220;--dg:#ff7b6b;--ok:#4cc38a;--wn:#f2c15b}}
+:root[data-theme="dark"]{--bg:#12161c;--card:#1b222c;--tx:#e8ecf2;--mut:#98a2b3;--bd:#2d3643;--pr:#5b8cff;--prt:#0b1220;--dg:#ff7b6b;--ok:#4cc38a;--wn:#f2c15b}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{background:var(--card);border-bottom:1px solid var(--bd);padding:10px 16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+header b{font-size:16px}nav{display:flex;gap:4px;overflow-x:auto;flex:1}
+nav button{background:none;border:0;color:var(--mut);padding:8px 12px;border-radius:8px;cursor:pointer;font:inherit;white-space:nowrap}
+nav button.on{background:var(--pr);color:var(--prt)}
+main{max-width:1100px;margin:0 auto;padding:16px}
+h2{margin:0;font-size:20px}.bar{display:flex;gap:10px;align-items:center;margin-bottom:12px;flex-wrap:wrap}.bar h2{flex:1}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px;margin-bottom:14px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:14px}
+.stat{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px}.stat b{display:block;font-size:28px}.stat span,.mut{color:var(--mut)}
+.sc{overflow-x:auto}table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--bd);vertical-align:top}th{color:var(--mut);font-weight:600;font-size:13px}
+.act{white-space:nowrap;text-align:right}.act button,.b2{background:none;border:1px solid var(--bd);color:var(--tx);border-radius:7px;padding:4px 9px;cursor:pointer;font:inherit;font-size:13px;margin-left:4px}
+.act .dg,.b2.dg{color:var(--dg)}.b1{background:var(--pr);color:var(--prt);border:0;border-radius:8px;padding:8px 14px;cursor:pointer;font:inherit}
+input,select,textarea{width:100%;padding:8px 10px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--tx);font:inherit}
+.bar input{width:200px}label{display:block;margin-bottom:10px;font-size:13px;color:var(--mut)}label input,label select,label textarea{margin-top:4px;color:var(--tx)}
+.row{display:flex;gap:8px;justify-content:flex-end;margin-top:6px}
+#m{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;padding:16px;z-index:20}
+.mb{background:var(--card);border-radius:12px;padding:16px;width:100%;max-width:480px;max-height:90%;overflow:auto}.mh{display:flex;justify-content:space-between;margin-bottom:12px}.x{background:none;border:0;color:var(--mut);cursor:pointer;font-size:16px}
+.tag{display:inline-block;padding:1px 9px;border-radius:99px;font-size:12px;border:1px solid var(--bd)}.Active{color:var(--ok)}.Dropped,.Inactive{color:var(--dg)}.Graduated{color:var(--pr)}.OnLeave{color:var(--wn)}
+.login{max-width:340px;margin:12vh auto;padding:0 16px}.err{color:var(--dg);min-height:20px;font-size:13px}
+dl{display:grid;grid-template-columns:130px 1fr;gap:6px 10px;margin:0}dt{color:var(--mut)}dd{margin:0}
+</style></head>
+<body><div id="app"></div><div id="m"></div>
+<script>
+const $=s=>document.querySelector(s),esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+const STAT=['Active','Inactive','On Leave','Graduated','Dropped'],SEM=['1st Semester','2nd Semester','Summer'];
+let db,view='dashboard',arg=null,q='',auth=false;
+try{auth=sessionStorage.getItem('sis_auth')=='1'}catch(e){}
+function seed(){const d1=uid(),d2=uid(),c1=uid(),c2=uid(),c3=uid(),s1=uid(),s2=uid();return{
+departments:[{id:d1,code:'CCS',name:'College of Computer Studies',description:'Computing and IT programs'},{id:d2,code:'CBA',name:'College of Business Administration',description:'Business programs'}],
+courses:[{id:c1,code:'BSIT',title:'BS Information Technology',units:160,deptId:d1,description:'Four-year IT degree'},{id:c2,code:'BSCS',title:'BS Computer Science',units:164,deptId:d1,description:''},{id:c3,code:'BSBA',title:'BS Business Administration',units:150,deptId:d2,description:''}],
+students:[{id:s1,studentNo:'2026-0001',name:'Juan Dela Cruz',email:'juan@example.com',birthdate:'2005-03-14',deptId:d1,courseId:c1,year:'2',status:'Active',address:'Basista, Pangasinan'},{id:s2,studentNo:'2026-0002',name:'Maria Santos',email:'maria@example.com',birthdate:'2004-11-02',deptId:d2,courseId:c3,year:'3',status:'Active',address:'Urdaneta City'}],
+academics:[{id:uid(),studentId:s1,schoolYear:'2025-2026',semester:'1st Semester',subject:'IT101 Programming 1',units:3,grade:'1.50',remarks:'Passed'},{id:uid(),studentId:s1,schoolYear:'2025-2026',semester:'2nd Semester',subject:'IT102 Programming 2',units:3,grade:'1.75',remarks:'Passed'}]}}
+try{db=JSON.parse(localStorage.getItem('sis_db'))}catch(e){}if(!db)db=seed();
+const save=()=>{try{localStorage.setItem('sis_db',JSON.stringify(db))}catch(e){}};
+const find=(t,id)=>db[t].find(x=>x.id==id),rm=(t,id)=>{db[t]=db[t].filter(x=>x.id!=id)};
+const dn=id=>{const x=find('departments',id);return x?esc(x.code):'—'},cn=id=>{const x=find('courses',id);return x?esc(x.code):'—'};
+const tag=s=>`<span class="tag ${s.replace(' ','')}">${esc(s)}</span>`;
+function modal(t,b){$('#m').innerHTML=`<div class=mb><div class=mh><b>${t}</b><button class=x onclick=closeM()>✕</button></div>${b}</div>`;$('#m').style.display='flex'}
+function closeM(){$('#m').style.display='none'}
+function ask(msg,fn){modal('Please confirm',`<p>${msg}</p><div class=row><button class=b2 onclick=closeM()>Cancel</button><button class="b2 dg" id=yes>Delete</button></div>`);$('#yes').onclick=()=>{closeM();fn()}}
+function info(t,msg){modal(t,`<p>${msg}</p><div class=row><button class=b1 onclick=closeM()>OK</button></div>`)}
+function form(title,fs,v,cb){v=v||{};modal(title,`<form id=f>${fs.map(f=>`<label>${f.l}${f.t=='textarea'?`<textarea name=${f.k}>${esc(v[f.k])}</textarea>`:f.t=='select'?`<select name=${f.k}>${f.o.map(o=>`<option value="${esc(o[0])}" ${o[0]==v[f.k]?'selected':''}>${esc(o[1])}</option>`).join('')}</select>`:`<input name=${f.k} type=${f.t||'text'} value="${esc(v[f.k])}" ${f.r?'required':''} ${f.s?'step='+f.s:''}>`}</label>`).join('')}<div class=row><button type=button class=b2 onclick=closeM()>Cancel</button><button class=b1>Save</button></div></form>`);
+$('#f').onsubmit=e=>{e.preventDefault();cb(Object.fromEntries(new FormData(e.target)));closeM();render()}}
+const opt=(t,l)=>db[t].map(x=>[x.id,l(x)]),yrs=[1,2,3,4,5].map(n=>[n,'Year '+n]);
+/* Departments */
+const depF=()=>[{k:'code',l:'Code',r:1},{k:'name',l:'Department name',r:1},{k:'description',l:'Description',t:'textarea'}];
+const addDep=()=>form('Add new department',depF(),{},d=>{db.departments.push({id:uid(),...d});save()});
+const editDep=id=>{const x=find('departments',id);form('Update department',depF(),x,d=>{Object.assign(x,d);save()})};
+function viewDep(id){const x=find('departments',id),cs=db.courses.filter(c=>c.deptId==id);modal('Department details',`<dl><dt>Code</dt><dd>${esc(x.code)}</dd><dt>Name</dt><dd>${esc(x.name)}</dd><dt>Description</dt><dd>${esc(x.description)||'—'}</dd><dt>Courses</dt><dd>${cs.map(c=>esc(c.code)).join(', ')||'None'}</dd><dt>Students</dt><dd>${db.students.filter(s=>s.deptId==id).length}</dd></dl>`)}
+function delDep(id){const n=db.courses.filter(c=>c.deptId==id).length+db.students.filter(s=>s.deptId==id).length;if(n)return info('Cannot delete','This department still has courses or students linked to it. Reassign or remove them first.');ask('Delete this department?',()=>{rm('departments',id);save();render()})}
+/* Courses */
+const couF=()=>[{k:'code',l:'Course code',r:1},{k:'title',l:'Course title',r:1},{k:'units',l:'Total units',t:'number',r:1},{k:'deptId',l:'Department',t:'select',o:opt('departments',d=>d.code+' – '+d.name)},{k:'description',l:'Description',t:'textarea'}];
+const addCou=()=>db.departments.length?form('Add new course',couF(),{},d=>{db.courses.push({id:uid(),...d});save()}):info('No departments','Add a department first.');
+const editCou=id=>{const x=find('courses',id);form('Update course details',couF(),x,d=>{Object.assign(x,d);save()})};
+function viewCou(id){const x=find('courses',id);modal('Course details',`<dl><dt>Code</dt><dd>${esc(x.code)}</dd><dt>Title</dt><dd>${esc(x.title)}</dd><dt>Units</dt><dd>${esc(x.units)}</dd><dt>Department</dt><dd>${dn(x.deptId)}</dd><dt>Description</dt><dd>${esc(x.description)||'—'}</dd><dt>Enrolled</dt><dd>${db.students.filter(s=>s.courseId==id).length}</dd></dl>`)}
+function delCou(id){if(db.students.some(s=>s.courseId==id))return info('Cannot delete','Students are still enrolled in this course.');ask('Delete this course?',()=>{rm('courses',id);save();render()})}
+/* Students */
+const stuF=()=>[{k:'studentNo',l:'Student no.',r:1},{k:'name',l:'Full name',r:1},{k:'email',l:'Email',t:'email'},{k:'birthdate',l:'Birthdate',t:'date'},{k:'deptId',l:'Department',t:'select',o:opt('departments',d=>d.code)},{k:'courseId',l:'Course',t:'select',o:opt('courses',c=>c.code+' – '+c.title)},{k:'year',l:'Year level',t:'select',o:yrs},{k:'status',l:'Status',t:'select',o:STAT.map(s=>[s,s])},{k:'address',l:'Address'}];
+const addStu=()=>db.courses.length?form('Add new student',stuF(),{status:'Active'},d=>{db.students.push({id:uid(),...d});save()}):info('No courses','Add a department and a course first.');
+const editStu=id=>{const x=find('students',id);form('Update student details',stuF(),x,d=>{Object.assign(x,d);save()})};
+const openStu=id=>{view='student';arg=id;render()};
+const statStu=id=>{const x=find('students',id);form('Update student status',[{k:'status',l:'Status',t:'select',o:STAT.map(s=>[s,s])}],x,d=>{x.status=d.status;save()})};
+const delStu=id=>ask('Delete this student and all of their academic records?',()=>{rm('students',id);db.academics=db.academics.filter(a=>a.studentId!=id);save();view='students';render()});
+const acF=()=>[{k:'schoolYear',l:'School year (e.g. 2025-2026)',r:1},{k:'semester',l:'Semester',t:'select',o:SEM.map(s=>[s,s])},{k:'subject',l:'Subject',r:1},{k:'units',l:'Units',t:'number',r:1},{k:'grade',l:'Grade',t:'number',s:'0.01'},{k:'remarks',l:'Remarks'}];
+const addAc=sid=>form('Add student academic record',acF(),{},d=>{db.academics.push({id:uid(),studentId:sid,...d});save()});
+const editAc=id=>{const x=find('academics',id);form('Edit student academic record',acF(),x,d=>{Object.assign(x,d);save()})};
+const delAc=id=>ask('Delete this academic record?',()=>{rm('academics',id);save();render()});
+function stuPage(id){const s=find('students',id);if(!s){view='students';return listView('students')}
+const ac=db.academics.filter(a=>a.studentId==id),g=ac.filter(a=>a.grade!=='');const avg=g.length?(g.reduce((t,a)=>t+ +a.grade,0)/g.length).toFixed(2):'—';
+return `<div class=bar><button class=b2 onclick="go('students')">← Students</button><h2>${esc(s.name)}</h2><button class=b2 onclick="editStu('${id}')">Edit</button><button class=b2 onclick="statStu('${id}')">Update status</button><button class="b2 dg" onclick="delStu('${id}')">Delete</button></div>
+<div class=card><dl><dt>Student no.</dt><dd>${esc(s.studentNo)}</dd><dt>Status</dt><dd>${tag(s.status)}</dd><dt>Email</dt><dd>${esc(s.email)||'—'}</dd><dt>Birthdate</dt><dd>${esc(s.birthdate)||'—'}</dd><dt>Department</dt><dd>${dn(s.deptId)}</dd><dt>Course</dt><dd>${cn(s.courseId)}, Year ${esc(s.year)}</dd><dt>Address</dt><dd>${esc(s.address)||'—'}</dd></dl></div>
+<div class=bar><h2>Academic history <span class=mut style="font-size:14px">Average: ${avg}</span></h2><button class=b1 onclick="addAc('${id}')">+ Add record</button></div>
+<div class=card><div class=sc><table><thead><tr><th>School year</th><th>Semester</th><th>Subject</th><th>Units</th><th>Grade</th><th>Remarks</th><th></th></tr></thead><tbody>${ac.length?ac.map(a=>`<tr><td>${esc(a.schoolYear)}</td><td>${esc(a.semester)}</td><td>${esc(a.subject)}</td><td>${esc(a.units)}</td><td>${esc(a.grade)}</td><td>${esc(a.remarks)}</td><td class=act><button onclick="editAc('${a.id}')">Edit</button><button class=dg onclick="delAc('${a.id}')">Delete</button></td></tr>`).join(''):'<tr><td colspan=7 class=mut>No academic records yet.</td></tr>'}</tbody></table></div></div>`}
+/* Lists */
+const cnt=(t,k,id)=>db[t].filter(x=>x[k]==id).length;
+const cfg={
+departments:{title:'Departments',cols:['Code','Name','Courses','Students'],items:()=>db.departments,cells:d=>[esc(d.code),esc(d.name),cnt('courses','deptId',d.id),cnt('students','deptId',d.id)],text:d=>d.code+d.name,a:'addDep',v:'viewDep',e:'editDep',d:'delDep'},
+courses:{title:'Courses',cols:['Code','Title','Units','Department'],items:()=>db.courses,cells:c=>[esc(c.code),esc(c.title),esc(c.units),dn(c.deptId)],text:c=>c.code+c.title,a:'addCou',v:'viewCou',e:'editCou',d:'delCou'},
+students:{title:'Students',cols:['Student no.','Name','Course','Year','Status'],items:()=>db.students,cells:s=>[esc(s.studentNo),esc(s.name),cn(s.courseId),esc(s.year),tag(s.status)],text:s=>s.studentNo+s.name+s.status,a:'addStu',v:'openStu',e:'editStu',d:'delStu'}};
+function rows(k){const c=cfg[k],r=c.items().filter(x=>c.text(x).toLowerCase().includes(q.toLowerCase()));return r.length?r.map(x=>`<tr>${c.cells(x).map(t=>`<td>${t}</td>`).join('')}<td class=act><button onclick="${c.v}('${x.id}')">View</button><button onclick="${c.e}('${x.id}')">Edit</button><button class=dg onclick="${c.d}('${x.id}')">Delete</button></td></tr>`).join(''):'<tr><td colspan=9 class=mut>No records found.</td></tr>'}
+function listView(k){const c=cfg[k];return `<div class=bar><h2>${c.title}</h2><input placeholder="Search…" value="${esc(q)}" oninput="q=this.value;$('#tb').innerHTML=rows('${k}')"><button class=b1 onclick="${c.a}()">+ Add new</button></div><div class=card><div class=sc><table><thead><tr>${c.cols.map(h=>`<th>${h}</th>`).join('')}<th></th></tr></thead><tbody id=tb>${rows(k)}</tbody></table></div></div>`}
+function dash(){const S=db.students,by=s=>S.filter(x=>x.status==s).length;
+return `<div class=bar><h2>Dashboard</h2></div><div class=grid><div class=stat><b>${db.departments.length}</b><span>Departments</span></div><div class=stat><b>${db.courses.length}</b><span>Courses</span></div><div class=stat><b>${S.length}</b><span>Students</span></div><div class=stat><b>${by('Active')}</b><span>Active students</span></div><div class=stat><b>${db.academics.length}</b><span>Academic records</span></div></div>
+<div class=grid style="grid-template-columns:repeat(auto-fit,minmax(280px,1fr))"><div class=card><b>Students by status</b><table>${STAT.map(s=>`<tr><td>${tag(s)}</td><td class=act>${by(s)}</td></tr>`).join('')}</table></div>
+<div class=card><b>Students per department</b><table>${db.departments.map(d=>`<tr><td>${esc(d.name)}</td><td class=act>${cnt('students','deptId',d.id)}</td></tr>`).join('')||'<tr><td class=mut>None</td></tr>'}</table></div>
+<div class=card><b>Recently added students</b><table>${S.slice(-5).reverse().map(s=>`<tr><td><a href=# onclick="openStu('${s.id}');return false" style="color:var(--pr)">${esc(s.name)}</a></td><td class=act>${cn(s.courseId)}</td></tr>`).join('')||'<tr><td class=mut>None</td></tr>'}</table></div></div>`}
+/* Shell */
+function go(v){view=v;arg=null;q='';render()}
+function login(e){e.preventDefault();const f=new FormData(e.target);if(f.get('u')=='admin'&&f.get('p')=='admin123'){auth=true;try{sessionStorage.setItem('sis_auth','1')}catch(x){}render()}else $('#err').textContent='Invalid username or password.'}
+function logout(){auth=false;try{sessionStorage.removeItem('sis_auth')}catch(e){}view='dashboard';render()}
+function render(){const A=$('#app');
+if(!auth){A.innerHTML=`<div class=login><div class=card><h2>Student Information System</h2><p class=mut>Sign in to continue.</p><form onsubmit="login(event)"><label>Username<input name=u autocomplete=username required></label><label>Password<input name=p type=password autocomplete=current-password required></label><div class=err id=err></div><button class=b1 style="width:100%">Log in</button></form></div></div>`;return}
+const tabs=[['dashboard','Dashboard'],['departments','Departments'],['courses','Courses'],['students','Students']],cur=view=='student'?'students':view;
+A.innerHTML=`<header><b>KJDR</b><nav>${tabs.map(t=>`<button class="${cur==t[0]?'on':''}" onclick="go('${t[0]}')">${t[1]}</button>`).join('')}</nav><button class=b2 onclick=logout()>Log out</button></header><main>${view=='dashboard'?dash():view=='student'?stuPage(arg):listView(view)}</main>`}
+render();
+</script></body></html>
